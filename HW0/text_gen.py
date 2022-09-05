@@ -253,14 +253,6 @@ def calculate_trigrams(word_list):
     distribution = {}
     distribution[trigramlist[0][1]] = 1.0
     trigrams[None,trigramlist[0][0]] = distribution
-    print(trigrams[('think', 'i')])
-    print(trigrams[('i', 'am')])
-    print(trigrams[(None, None)])
-    print(trigrams[('therefore', 'i')])
-    print(trigrams[('think', 'therefore')])
-    print(trigrams[('i', 'think')])
-    print(trigrams[(None, 'i')])
-    print(trigrams[('am', 'i')])
     return trigrams
 
 
