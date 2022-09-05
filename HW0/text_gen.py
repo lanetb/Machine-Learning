@@ -172,8 +172,34 @@ def calculate_bigrams(word_list):
     .75
 
     """
-    # YOUR CODE HERE
-    pass
+    bigrams = {}
+    bigramlist = []
+
+
+    for i in range(len(word_list)):
+        if i < len(word_list)-1:
+            bigramlist.append((word_list[i], word_list[i+1]))
+
+    
+    for i in bigramlist:
+        if i[0] not in bigrams:
+            bigrams[i[0]] = [i[1]]
+        else:
+            bigrams[i[0]].append(i[1])
+
+    for i in bigrams:
+        distribution = {}
+        for j in bigrams[i]:
+            if j not in distribution:
+                distribution[j] = 1
+            else:
+                distribution[j] += 1
+        bigrams[i] = counts_to_probabilities(distribution)
+
+    distribution = {}
+    distribution[bigramlist[0][0]] = 1.0
+    bigrams[None] = distribution
+    return bigrams
 
 
 def calculate_trigrams(word_list):
@@ -199,7 +225,43 @@ def calculate_trigrams(word_list):
     ('am', 'i'): {'think': 1.0}}
     """
     # YOUR CODE HERE
-    pass
+    trigrams = {}
+    trigramlist = []
+
+    for i in range(len(word_list)):
+        if i < len(word_list)-2:
+            trigramlist.append((word_list[i], word_list[i+1], word_list[i+2]))
+
+    for i in trigramlist:
+        if (i[0], i[1]) not in trigrams:
+            trigrams[(i[0], i[1])] = [i[2]]
+        else:
+            trigrams[(i[0], i[1])].append(i[2])
+
+    for i in trigrams:
+        distribution = {}
+        for j in trigrams[i]:
+            if j not in distribution:
+                distribution[j] = 1
+            else:
+                distribution[j] += 1
+        trigrams[i] = counts_to_probabilities(distribution)
+
+    distribution = {}
+    distribution[trigramlist[0][0]] = 1.0
+    trigrams[None,None] = distribution
+    distribution = {}
+    distribution[trigramlist[0][1]] = 1.0
+    trigrams[None,trigramlist[0][0]] = distribution
+    print(trigrams[('think', 'i')])
+    print(trigrams[('i', 'am')])
+    print(trigrams[(None, None)])
+    print(trigrams[('therefore', 'i')])
+    print(trigrams[('think', 'therefore')])
+    print(trigrams[('i', 'think')])
+    print(trigrams[(None, 'i')])
+    print(trigrams[('am', 'i')])
+    return trigrams
 
 
 def random_bigram_text(first_word, bigrams, num_words):
@@ -229,7 +291,12 @@ def random_bigram_text(first_word, bigrams, num_words):
 
     """
     # YOUR CODE HERE
-    pass
+    result = ""
+    x = first_word
+    for i in range(num_words):
+        result += x + " "
+        x = select_random(bigrams[x])
+    return result.rstrip()
 
 
 def random_trigram_text(first_word, second_word, bigrams, trigrams, num_words):
@@ -255,8 +322,22 @@ def random_trigram_text(first_word, second_word, bigrams, trigrams, num_words):
        single space.
 
     """
-    # YOUR CODE HERE
-    pass
+    x = first_word
+    result = x + " "
+    y = second_word
+    tempy = ""
+    for i in range(num_words - 1):
+        if (x,y) not in trigrams:
+            tempy = y
+            result += y + " "
+            y = select_random(bigrams[y])
+            x = tempy
+        else:
+            result += y + " "
+            tempy = y
+            y = select_random(trigrams[(x,y)])
+            x = tempy
+    return result.rstrip()
 
 
 def unigram_main(file_name:str):
@@ -299,5 +380,5 @@ if __name__ == "__main__":
 
     # You can insert testing code here, or switch out the main method
     # to try bigrams or trigrams.
-    unigram_main(args.input_file)
+    trigram_main(args.input_file)
 
