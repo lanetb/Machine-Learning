@@ -372,5 +372,5 @@ if __name__ == "__main__":
 
     # You can insert testing code here, or switch out the main method
     # to try bigrams or trigrams.
-    trigram_main(args.input_file)
+    igram_main(args.input_file)
 
