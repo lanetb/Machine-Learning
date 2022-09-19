@@ -116,7 +116,7 @@ class DecisionTree:
         :param max_depth: limit on the tree depth.
                           A depth 0 tree will have no splits.
         """
-       \sale\playstationpublishersale2022 self.max_depth = max_depth
+        self.max_depth = max_depth
         self.depth = 1
         self._root = Node()
 
