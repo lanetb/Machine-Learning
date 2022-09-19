@@ -136,13 +136,12 @@ class DecisionTree:
         return best_split
 
     def tree_build(self, X, y, classes):
-        if self.get_depth() >= self.max_depth or all(i == y[0] for i in y):
+        if self.get_depth() == self.max_depth or set(y) == 0:
             leaf = Node()
             leaf.left = None
             leaf.right = None
             leaf.split = None
-
-            leaf.predicted_class = np.bincount(y).argmax()
+            leaf.predicted_class = np.argmax(np.bincount(y))
             return leaf
         else:
             root = Node()
@@ -170,6 +169,8 @@ class DecisionTree:
         
     def single_predict(self, x):
         node = self.root
+        if self.max_depth == 0:
+            return node.predicted_class
 
         while node.left:
             if x[node.split.dim] < node.split.pos:
@@ -188,7 +189,7 @@ class DecisionTree:
         :param X:  Numpy array with shape (num_samples, num_features)
         :return: A length num_samples numpy array containing predicted labels.
         """
-        return [self.single_predict(inputs) for inputs in X]
+        return np.array([self.single_predict(inputs) for inputs in X])
         
 
     def get_depth(self):
