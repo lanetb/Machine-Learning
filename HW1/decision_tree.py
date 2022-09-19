@@ -115,7 +115,7 @@ class DecisionTree:
                           A depth 0 tree will have no splits.
         """
         self.max_depth = max_depth
-        self.depth = 1
+        self.depth = 0
         self.root = Node()
 
     def find_best_split(self, classes,X, y):
@@ -135,19 +135,21 @@ class DecisionTree:
         
         return best_split
 
-    def tree_build(self, X, y, classes, depth):
-        if self.get_depth() == self.max_depth or all(i == y[0] for i in y):
+    def tree_build(self, X, y, classes):
+        if self.get_depth() >= self.max_depth or all(i == y[0] for i in y):
             leaf = Node()
             leaf.left = None
             leaf.right = None
             leaf.split = None
+
+            leaf.predicted_class = np.bincount(y).argmax()
             return leaf
         else:
             root = Node()
             root.split = self.find_best_split(classes, X, y)
-            self.depth = self.get_depth() + depth
-            root.left = self.tree_build(root.split.X_left, root.split.y_left, classes, 0)
-            root.right = self.tree_build(root.split.X_right, root.split.y_right, classes, 1)
+            self.depth = self.get_depth() + 1
+            root.left = self.tree_build(root.split.X_left, root.split.y_left, classes)
+            root.right = self.tree_build(root.split.X_right, root.split.y_right, classes)
             return root
 
         
@@ -163,11 +165,19 @@ class DecisionTree:
         # create a python set with all possible class labels
 
         self.classes = set(y)
-        if self.max_depth == 0:
-            self.root = self.tree_build(X, y, self.classes, 0)
-        else:
-            self.root = self.tree_build(X, y, self.classes, self.depth)
+        self.root = self.tree_build(X, y, self.classes)
         
+        
+    def single_predict(self, x):
+        node = self.root
+
+        while node.left:
+            if x[node.split.dim] < node.split.pos:
+                node = node.left
+            else:
+                node = node.right
+    
+        return node.predicted_class
 
 
     def predict(self, X):
@@ -178,7 +188,8 @@ class DecisionTree:
         :param X:  Numpy array with shape (num_samples, num_features)
         :return: A length num_samples numpy array containing predicted labels.
         """
-        raise NotImplementedError
+        return [self.single_predict(inputs) for inputs in X]
+        
 
     def get_depth(self):
         """
@@ -204,6 +215,7 @@ class Node:
         self.left = None
         self.right = None
         self.split = None
+        self.predicted_class = None
 
 
 def tree_demo():
