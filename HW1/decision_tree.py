@@ -8,6 +8,8 @@ Modified by:
  molloykp -- added comments and switch impurity to entropy
 
 """
+from asyncio.windows_events import NULL
+from turtle import left
 import numpy as np
 from collections import namedtuple
 import argparse
@@ -68,6 +70,7 @@ def split_generator(X, y):
                             X_sort[0:index, :], y_sort[0:index],
                             X_sort[index::, :], y_sort[index::])
 
+
 def impurity(classes, y):
     """
     Return the impurity/entropy of the data in y
@@ -77,11 +80,12 @@ def impurity(classes, y):
     :return: A scalar with the entropy of the class labels
     """
 
-    raise NotImplementedError
+    unique, count = np.unique(y, return_counts=True)
+    return np.sum(-np.multiply((count/len(y)), np.log2(count/len(y))))
 
 
 def weighted_impurity(classes, y_left, y_right):
-   """
+    """
     Weighted entropy impurity for a possible split.
     :param classes: list of the classes
              y_left: class labels for the left node in the split
@@ -89,7 +93,13 @@ def weighted_impurity(classes, y_left, y_right):
 
     :return: A scalar with the weighted entropy
     """
-    raise NotImplementedError
+    left = impurity(classes, y_left)
+    right = impurity(classes, y_right)
+    left_plus_right = len(y_left) + len(y_right)
+
+    return np.add((np.multiply(len(y_left)/left_plus_right, left)),
+                  (np.multiply(len(y_right)/left_plus_right, right)))
+
 
 class DecisionTree:
     """
@@ -106,7 +116,43 @@ class DecisionTree:
         :param max_depth: limit on the tree depth.
                           A depth 0 tree will have no splits.
         """
-        raise NotImplementedError
+       \sale\playstationpublishersale2022 self.max_depth = max_depth
+        self.depth = 1
+        self._root = Node()
+
+    def find_best_split(self, X, y):
+        splits = split_generator(X, y)
+        best_info_gain = 0
+        best_split = NULL
+
+        for i in splits:
+            entropy = impurity(y, X)
+            w_entropy = weighted_impurity(y, i.y_left, i.y_right)
+
+            info_gain = entropy - w_entropy
+
+            if info_gain > best_info_gain:
+                best_info_gain = info_gain
+                best_split = i
+        
+        return best_split
+
+    def tree_growth (self, X, y, depth):
+        if depth == self.max_depth or all(i == y[0] for i in y):
+            leaf = Node()
+            self.depth = depth
+            leaf.left = NULL
+            leaf.right = NULL
+            leaf.split = NULL
+            return leaf
+        else:
+            root = Node()
+            root.split = self.find_best_split(X, y)
+            root.left = self.tree_growth(root.split.X_left, root.split.y_left, depth + 1)
+            root.right = self.tree_growth(root.split.X_right, root.split.y_right, depth + 1)
+            return root
+
+        
 
     def fit(self, X, y):
         """
@@ -119,9 +165,9 @@ class DecisionTree:
         # create a python set with all possible class labels
 
         self.classes = set(y)
-
-        raise NotImplementedError
-
+        if not self.max_depth == 0:
+            self.root = self.tree_growth(X, y, self.depth)
+        self.root = self.tree_growth(X, y, 0)
 
 
     def predict(self, X):
@@ -138,7 +184,7 @@ class DecisionTree:
         """
         :return: The depth of the decision tree.
         """
-        raise NotImplementedError
+        return self.depth
 
 
 class Node:
@@ -153,7 +199,11 @@ class Node:
         split - A Split object representing the split at this node,
                 or Null for leaves
     """
-    pass
+
+    def __init__(self):
+        self.left = NULL
+        self.right = NULL
+        self.split = NULL
 
 
 def tree_demo():
@@ -167,6 +217,7 @@ def tree_demo():
     tree = DecisionTree()
     tree.fit(X, y)
     draw_tree.draw_tree(X, y, tree)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Decision Tree modeling')
@@ -198,7 +249,7 @@ def main():
     parms = parse_args()
 
     if parms.demo_flag:
-       tree_demo()
+        tree_demo()
     else:
         # read in training and test data
         # compute model on training data
