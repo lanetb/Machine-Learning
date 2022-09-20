@@ -8,8 +8,6 @@ Modified by:
  molloykp -- added comments and switch impurity to entropy
 
 """
-from asyncio.windows_events import NULL
-from turtle import left
 import numpy as np
 from collections import namedtuple
 import argparse
@@ -117,17 +115,17 @@ class DecisionTree:
                           A depth 0 tree will have no splits.
         """
         self.max_depth = max_depth
-        self.depth = 1
-        self._root = Node()
+        self.depth = 0
+        self.root = Node()
 
-    def find_best_split(self, X, y):
+    def find_best_split(self, classes,X, y):
         splits = split_generator(X, y)
         best_info_gain = 0
-        best_split = NULL
+        best_split = None
 
         for i in splits:
-            entropy = impurity(y, X)
-            w_entropy = weighted_impurity(y, i.y_left, i.y_right)
+            entropy = impurity(classes, y)
+            w_entropy = weighted_impurity(classes, i.y_left, i.y_right)
 
             info_gain = entropy - w_entropy
 
@@ -137,19 +135,20 @@ class DecisionTree:
         
         return best_split
 
-    def tree_growth (self, X, y, depth):
-        if depth == self.max_depth or all(i == y[0] for i in y):
+    def tree_build(self, X, y, classes):
+        if self.get_depth() == self.max_depth or set(y) == 0:
             leaf = Node()
-            self.depth = depth
-            leaf.left = NULL
-            leaf.right = NULL
-            leaf.split = NULL
+            leaf.left = None
+            leaf.right = None
+            leaf.split = None
+            leaf.predicted_class = np.argmax(np.bincount(y))
             return leaf
         else:
             root = Node()
-            root.split = self.find_best_split(X, y)
-            root.left = self.tree_growth(root.split.X_left, root.split.y_left, depth + 1)
-            root.right = self.tree_growth(root.split.X_right, root.split.y_right, depth + 1)
+            root.split = self.find_best_split(classes, X, y)
+            self.depth = self.get_depth() + 1
+            root.left = self.tree_build(root.split.X_left, root.split.y_left, classes)
+            root.right = self.tree_build(root.split.X_right, root.split.y_right, classes)
             return root
 
         
@@ -165,9 +164,21 @@ class DecisionTree:
         # create a python set with all possible class labels
 
         self.classes = set(y)
-        if not self.max_depth == 0:
-            self.root = self.tree_growth(X, y, self.depth)
-        self.root = self.tree_growth(X, y, 0)
+        self.root = self.tree_build(X, y, self.classes)
+        
+        
+    def single_predict(self, x):
+        node = self.root
+        if self.max_depth == 0:
+            return node.predicted_class
+
+        while node.left:
+            if x[node.split.dim] < node.split.pos:
+                node = node.left
+            else:
+                node = node.right
+    
+        return node.predicted_class
 
 
     def predict(self, X):
@@ -178,7 +189,8 @@ class DecisionTree:
         :param X:  Numpy array with shape (num_samples, num_features)
         :return: A length num_samples numpy array containing predicted labels.
         """
-        raise NotImplementedError
+        return np.array([self.single_predict(inputs) for inputs in X])
+        
 
     def get_depth(self):
         """
@@ -201,9 +213,10 @@ class Node:
     """
 
     def __init__(self):
-        self.left = NULL
-        self.right = NULL
-        self.split = NULL
+        self.left = None
+        self.right = None
+        self.split = None
+        self.predicted_class = None
 
 
 def tree_demo():
