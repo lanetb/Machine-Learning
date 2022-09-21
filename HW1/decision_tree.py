@@ -136,7 +136,7 @@ class DecisionTree:
         return best_split
 
     def tree_build(self, X, y, classes):
-        if self.get_depth() == self.max_depth or set(y) == 0:
+        if self.get_depth() == self.max_depth or len(set(y)) == 1:
             leaf = Node()
             leaf.left = None
             leaf.right = None
