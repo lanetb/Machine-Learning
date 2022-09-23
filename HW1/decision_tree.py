@@ -137,11 +137,13 @@ class DecisionTree:
 
     def tree_build(self, X, y, classes):
         if self.get_depth() == self.max_depth or len(set(y)) == 1:
+            idx, counts = 0, 0
             leaf = Node()
             leaf.left = None
             leaf.right = None
             leaf.split = None
-            leaf.predicted_class = np.argmax(np.bincount(y))
+            idx, counts = np.unique(y, return_counts = True)
+            leaf.predicted_class = idx[counts.argmax()]
             return leaf
         else:
             root = Node()
@@ -173,7 +175,7 @@ class DecisionTree:
             return node.predicted_class
 
         while node.left:
-            if x[node.split.dim] < node.split.pos:
+            if x[node.split.dim] <= node.split.pos:
                 node = node.left
             else:
                 node = node.right
