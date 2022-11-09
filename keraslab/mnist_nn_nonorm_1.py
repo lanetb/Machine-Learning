@@ -6,44 +6,31 @@ from tensorflow import keras
 from keras.models import Sequential
 from keras.layers.core import Dense
 
-X_train = np.load('MNIST_X_train.npy')
-y_train = np.load('MNIST_y_train.npy')
-X_test = np.load('MNIST_X_test.npy')
-y_test = np.load('MNIST_y_test.npy')
+mnist = tf.keras.datasets.mnist
+(train_nums, train_labels), (test_nums, test_labels) = mnist.load_data()
 
+class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-
-
-epochs    = 20
-batch_size = 1000
-num_neurons  = 20
-
-
-def make_model(layer1_nodes, activation_function='sigmoid'):
-    """ relu activation, mse as loss and adam optimizer"""
-
-    model = Sequential()
-    model.add(Dense(layer1_nodes, input_shape=(1,), activation=activation_function))
-    model.add(Dense(1))
-    print(model.summary())
-    model.compile(loss='mse', optimizer='adam')
+def make_model_nn_nonorm():
+    model = tf.keras.Sequential([
+        tf.keras.layers.Flatten(input_shape=(28, 28)),
+        tf.keras.layers.Dense(128, activation='sigmoid'),
+        tf.keras.layers.Dense(128, activation='sigmoid'),
+        tf.keras.layers.Dense(128, activation='sigmoid'),
+        tf.keras.layers.Dense(10, activation = 'softmax')
+    ])
     return model
 
-## example code
-mymodel = make_model(2)
+def train_model_nn_nonorm(X, y, model):
+    model.compile(optimizer='adam',
+              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
 
-def train_model(X, y, model, epochs, batch_size):
-    ''' train the model for specified number of epochs, batch_size'''
-    h = model.fit(X, y, validation_split=0.2,
-               epochs=epochs,
-               batch_size=batch_size,
-               verbose=1)
-    plt.figure(figsize=(15,2.5))
-    plt.plot(h.history['loss'])
-    return model
+    history = model.fit(train_nums, train_labels, epochs=10, batch_size=10, validation_split = 0.20)
+    return model, history
 
-def predict_model(X, y):    
-    pred = model.predict(X)
-    mid_range = 20
-    X2 = np.random.random((n_samples,1))*mid_range-(mid_range/2)
-    pred2 = model.predict(X2)
+def predict_nn_nonorm(model, X, y):
+    probability_model = tf.keras.Sequential([model, 
+                                         tf.keras.layers.Softmax()])
+    predictions = probability_model.predict(X)
+    return predictions

@@ -5,6 +5,5 @@ def preprocess_data(X, y):
        whatever form your model is expecting."""
     
     # This function does nothing but return what it is sent  
-    X.shape[0]
-    
+    X = X / 255
     return X, y
